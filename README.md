@@ -1,0 +1,1 @@
+# sqlrun.nvim
