@@ -19,7 +19,7 @@ local util = require("util")
 local SqlRun = {}
 
 SqlRun.config = {
-  hosts_path = "/.config/sql_run/sql_hosts.json",
+  hosts_path = "/.config/sqlrun.nvim/sql_hosts.json",
 }
 
 local connection = ""
@@ -126,7 +126,7 @@ function SqlRun.execute_current_line(db_type)
   local lines = vim.api.nvim_buf_get_lines(0, line_number - 1, line_number, false)
 
   local query = util.format_query(lines[1], db_type)
-  return run_query(query)
+  run_query(query)
 end
 
 function SqlRun.setup(config)
