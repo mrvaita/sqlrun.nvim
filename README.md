@@ -42,8 +42,7 @@ should have the following fields:
                 "database": "",
                 "is_remote": false,
                 "db_type": "postgresql"
-        },
-        ...
+        }
 }
 ```
 ## Database on remote server
