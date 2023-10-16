@@ -19,7 +19,9 @@ end
 
 function M.format_query(query_str, db_type)
   if string.lower(db_type) == "postgresql" then
-    query_str = string.format("%s", query_str)  -- postgresql option added directly in query string command
+    query_str = string.format("\\timing on \n%s", query_str)      -- show timing of queries
+    query_str = string.format("\\pset border 2 \n%s", query_str)  -- show pretty lines outside the table
+    query_str = string.format("\\set QUIET 1 \n%s", query_str)    -- no console output for the following commands
   elseif string.lower(db_type) == "mysql" then
     query_str = string.format("set profiling=1;\n%s", query_str)  -- Doesn't seem to work :\
   else
@@ -57,12 +59,7 @@ local get_dbs = {
 
 local query_options = {
   mysql = "-t",
-  postgresql = "-c '\\set QUIET 1' -c '\\timing' -c '\\pset border 2'",
-}
-
-local cmd_option = {
-  mysql = "-e",
-  postgresql = "-c",
+  postgresql = "",
 }
 
 function M.get_connection_string(server, user, password, db_name, binary, is_remote, db_type)
@@ -101,9 +98,9 @@ function M.get_connection_string(server, user, password, db_name, binary, is_rem
 
   local connection_string = ""
   if is_remote then
-    connection_string = string.format("ssh %s \"%s %s %s %s %s", server, db_command_pattern, database_option[db_type], db_name, query_options[db_type], cmd_option[db_type]) .. " '%s'\""
+    connection_string = "cat \"%s\" | " .. string.format("ssh %s %s %s %s %s", server, db_command_pattern, database_option[db_type], query_options[db_type], db_name)
   else
-    connection_string = string.format("%s %s %s %s %s", db_command_pattern, database_option[db_type], db_name, query_options[db_type], cmd_option[db_type]) .. " '%s'"
+    connection_string = "cat \"%s\" | " .. string.format("%s %s %s %s", db_command_pattern, database_option[db_type], query_options[db_type], db_name)
   end
 
   return connection_string

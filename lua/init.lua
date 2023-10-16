@@ -1,2 +1,2 @@
-require('sqlrun')
-require('sqlrun.util')
+require("sqlrun")
+require("util")
