@@ -15,7 +15,7 @@ If the installation is successful and the host is correctly specified in the `sq
     At the end, the keybindings to execute the query will be available for the buffer.
 # Installation
 ### Lazy
-```@lua
+```lua
 {
   'mrvaita/sqlrun.nvim',
   opts = {},
@@ -24,7 +24,7 @@ If the installation is successful and the host is correctly specified in the `sq
 # Configuration
 The only configuration parameter available is the path to a json file where the database connection parameters are
 specified.
-```@lua
+```lua
 {
   'mrvaita/sqlrun.nvim',
   opts = { hosts_path = "~/.config/sqlrun.nvim/sql_hosts.json" },
@@ -32,7 +32,7 @@ specified.
 ```
 The default file name is `~/.config/sqlrun.nvim/sql_hosts.json`. Each hosts specified in the configuration file
 should have the following fields:
-```@json
+```json
 {
         "connection_name": {
                 "server": "servername",
