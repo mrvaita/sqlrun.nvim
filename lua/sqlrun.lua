@@ -5,6 +5,7 @@
 -- {
 --         "connection_name": {
 --                 "server": "servername",
+--                 "port": 5432,
 --                 "binary": "/usr/bin/psql"
 --                 "user": "username",
 --                 "password": "",

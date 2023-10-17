@@ -1,5 +1,5 @@
 # sqlrun.nvim
-Simple utility to execute SQL queries from within Neovim. The result of the query will be displayed in a horozontal split
+Simple utility to execute SQL queries from within Neovim. The result of the query will be displayed in a horizontal split
 in neovim.
 ### Supported databases
 * Postgresql
@@ -14,7 +14,7 @@ If the installation is successful and the host is correctly specified in the `sq
     (if not specified in the host configuration) against which the query needs to be executed.
     At the end, the keybindings to execute the query will be available for the buffer.
 # Installation
-### Lazy
+### lazy.nvim
 ```lua
 {
   'mrvaita/sqlrun.nvim',
@@ -36,6 +36,7 @@ should have the following fields:
 {
         "connection_name": {
                 "server": "servername",
+                "port": 5432,
                 "binary": "/usr/bin/psql"
                 "user": "username",
                 "password": "",
