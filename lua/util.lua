@@ -46,6 +46,11 @@ local database_option = {
   postgresql = "-d",
 }
 
+local port_option = {
+  mysql = "-P",
+  postgresql = "-p",
+}
+
 local get_dbs = {
   mysql = {
     query = "show databases;",
@@ -62,7 +67,8 @@ local query_options = {
   postgresql = "",
 }
 
-function M.get_connection_string(server, user, password, db_name, binary, is_remote, db_type)
+function M.get_connection_string(server, port, user, password, db_name, binary, is_remote, db_type)
+  print(string.format("PORT: %s", port))
   if db_type ~= "postgresql" and db_type ~= "mysql" then
     error(string.format("Specified database type %s not implemented. Please use 'postgresql' or 'mysql'", db_type))
   end
@@ -70,6 +76,9 @@ function M.get_connection_string(server, user, password, db_name, binary, is_rem
   local db_command_pattern = binary
   if password ~= "" then
     db_command_pattern = string.format("%s=%s %s", password_field[db_type], password, db_command_pattern)
+  end
+  if port ~= nil or port ~= "" then
+    db_command_pattern = string.format("%s %s %s", db_command_pattern, port_option[db_type], port)
   end
   if user ~= "" then
     db_command_pattern = string.format("%s %s %s", db_command_pattern, user_option[db_type], user)

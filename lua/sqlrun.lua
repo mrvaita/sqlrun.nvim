@@ -52,7 +52,7 @@ local function run_query(query)
   end
 
   -- Finally format the real command that executes the query
-  print(string.format(connection, query))
+  print(string.format(connection, tmp_query_file))
   vim.fn.jobstart(string.format(connection, tmp_query_file), {
     stdout_buffered = true,  -- Send me the output one line after the other
     on_stdout = append_data,
@@ -142,6 +142,7 @@ function SqlRun.setup(config)
 
     local client = util.select_value("Select a database connection", connections)
     local server = databases[client].server
+    local port = databases[client].port
     local binary = databases[client].binary
     local user = databases[client].user
     local password = databases[client].password
@@ -149,7 +150,7 @@ function SqlRun.setup(config)
     local is_remote = databases[client].is_remote
     local db_type = databases[client].db_type
 
-    connection = util.get_connection_string(server, user, password, database, binary, is_remote, db_type)
+    connection = util.get_connection_string(server, port, user, password, database, binary, is_remote, db_type)
 
     -- Call the function that executes query
     local map_opts = { noremap = true, silent = true, nowait = true }
