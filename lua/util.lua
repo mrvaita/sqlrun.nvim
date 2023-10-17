@@ -68,7 +68,6 @@ local query_options = {
 }
 
 function M.get_connection_string(server, port, user, password, db_name, binary, is_remote, db_type)
-  print(string.format("PORT: %s", port))
   if db_type ~= "postgresql" and db_type ~= "mysql" then
     error(string.format("Specified database type %s not implemented. Please use 'postgresql' or 'mysql'", db_type))
   end

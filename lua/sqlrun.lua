@@ -52,14 +52,12 @@ local function run_query(query)
   end
 
   -- Finally format the real command that executes the query
-  print(string.format(connection, tmp_query_file))
   vim.fn.jobstart(string.format(connection, tmp_query_file), {
     stdout_buffered = true,  -- Send me the output one line after the other
     on_stdout = append_data,
     on_stderr = append_data,
+    on_exit = function() os.remove(tmp_query_file) end,
   })
-
-  os.remove(tmp_query_file)
 end
 
 function SqlRun.execute_buffer(db_type)
