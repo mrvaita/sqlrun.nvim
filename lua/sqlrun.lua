@@ -140,6 +140,10 @@ function SqlRun.setup(config)
     table.sort(connections)
 
     local client = util.select_value("Select a database connection", connections)
+    if client == nil then
+      return
+    end
+
     local server = databases[client].server
     local port = databases[client].port
     local binary = databases[client].binary
