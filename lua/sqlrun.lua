@@ -17,17 +17,25 @@
 -- }
 local util = require("util")
 
-local SqlRun = {}
-
-SqlRun.config = {
-  hosts_path = "/.config/sqlrun.nvim/sql_hosts.json",
+local SqlRun = {
+  client = "",
+  database = "",
+  connection = nil,
+  result_buffers = {},
+  config = { hosts_path = "/.config/sqlrun.nvim/sql_hosts.json" },
 }
 
-local connection = ""
-local result_buffers = {}
+function SqlRun.is_connection_available()
+  return SqlRun.connection ~= nil
+end
+
+function SqlRun.get_current_connection_info()
+  return string.format("%s:%s", SqlRun.client, SqlRun.database)
+end
+
 local function run_query(query)
   -- Delete old buffer if any
-  local old_buf = table.remove(result_buffers)
+  local old_buf = table.remove(SqlRun.result_buffers)
   if old_buf ~= nil then
     vim.cmd('bd! ' .. old_buf)
   end
@@ -44,7 +52,7 @@ local function run_query(query)
   vim.opt.colorcolumn = ""
   local output_bufnr = vim.api.nvim_get_current_buf()
   -- Add query buffer to table (It can be deleted later)
-  table.insert(result_buffers, output_bufnr)
+  table.insert(SqlRun.result_buffers, output_bufnr)
 
   local append_data = function(_, data)
     if data then
@@ -53,7 +61,7 @@ local function run_query(query)
   end
 
   -- Finally format the real command that executes the query
-  vim.fn.jobstart(string.format(connection, tmp_query_file), {
+  vim.fn.jobstart(string.format(SqlRun.connection["command"], tmp_query_file), {
     stdout_buffered = true,  -- Send me the output one line after the other
     on_stdout = append_data,
     on_stderr = append_data,
@@ -131,6 +139,7 @@ end
 function SqlRun.setup(config)
   SqlRun.config = vim.tbl_extend('force', SqlRun.config, config or {})
   vim.api.nvim_create_user_command("SqlRun", function()
+    SqlRun.connection = nil
     -- Load databases connection params
     local databases = vim.fn.json_decode(util.lines_from(os.getenv("HOME") .. SqlRun.config.hosts_path))
     local connections = {}
@@ -153,7 +162,11 @@ function SqlRun.setup(config)
     local is_remote = databases[client].is_remote
     local db_type = databases[client].db_type
 
-    connection = util.get_connection_string(server, port, user, password, database, binary, is_remote, db_type)
+    SqlRun.connection = util.get_connection_string(server, port, user, password, database, binary, is_remote, db_type)
+    if SqlRun.connection["command"] ~= "" then
+      SqlRun.client = client
+      SqlRun.database = SqlRun.connection["database"]
+    end
 
     -- Call the function that executes query
     local map_opts = { noremap = true, silent = true, nowait = true }

@@ -3,7 +3,7 @@ local M = {}
 function M.select_value(prompt_message, data)
     local result = nil
     vim.ui.select(data, { prompt = prompt_message }, function(selection)
-        result = selection
+      result = selection
     end)
 
     return result
@@ -111,7 +111,8 @@ function M.get_connection_string(server, port, user, password, db_name, binary, 
     connection_string = "cat \"%s\" | " .. string.format("%s %s %s %s", db_command_pattern, database_option[db_type], query_options[db_type], db_name)
   end
 
-  return connection_string
+  return {
+          command = connection_string, database = db_name }
 end
 
 return M
