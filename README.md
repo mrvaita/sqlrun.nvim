@@ -1,6 +1,6 @@
 # sqlrun.nvim
 Simple utility to execute SQL queries from within Neovim. The result of the query will be displayed in a horizontal split
-in neovim.
+in Neovim.
 ### Supported databases
 * Postgresql
 * Mysql
@@ -55,7 +55,7 @@ executed via ssh connection and that means:
 That way the password will not be requested the next time an ssh connection is performed.
 
 ## Lualine integration
-SqlRun can use Lualine.nvim to display connection information in the following way
+SqlRun can use [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) to display connection information in the following way
 ```lua
 local sqlrun = require('sqlrun')
 require('lualine').setup{
