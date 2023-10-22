@@ -53,3 +53,17 @@ executed via ssh connection and that means:
 2. That the user did ssh into the server at least once and added the server to the ssh known hosts (typing `yes` in the terminal)
 3. That the user added the RSA or DSA identities to the authentication agent (eg `$ ssh-add ~/.ssh/id_rsa` and entered the password).
 That way the password will not be requested the next time an ssh connection is performed.
+
+## Lualine integration
+SqlRun can use Lualine.nvim to display connection information in the following way
+```lua
+local sqlrun = require('sqlrun')
+require('lualine').setup{
+  sections = {
+    lualine_x = {
+      { sqlrun.get_current_connection_info, cond = sqlrun.is_connection_available },
+    },
+  },
+}
+```
+The connection info will be displayed as `<connection-name>:<database-name>`
