@@ -54,7 +54,7 @@ local port_option = {
 local get_dbs = {
   mysql = {
     query = "show databases;",
-    cmd_opts = "",
+    cmd_opts = "-N",
   },
   postgresql = {
     query = "SELECT datname FROM pg_database WHERE datistemplate = false;",
@@ -67,7 +67,7 @@ local query_options = {
   postgresql = "",
 }
 
-function M.get_connection_string(server, port, user, password, db_name, binary, is_remote, db_type)
+function M.get_connection_string(server, port, user, password, db_name, binary, is_remote, db_type, ssh_tunnel)
   if db_type ~= "postgresql" and db_type ~= "mysql" then
     error(string.format("Specified database type %s not implemented. Please use 'postgresql' or 'mysql'", db_type))
   end
@@ -89,6 +89,12 @@ function M.get_connection_string(server, port, user, password, db_name, binary, 
       dbs = string.format("echo \"%s\" | ssh %s \"%s %s %s\"", get_dbs[db_type].query, server, db_command_pattern, database_option[db_type], get_dbs[db_type].cmd_opts)
     else
       dbs = string.format("echo \"%s\" | %s %s %s", get_dbs[db_type].query, db_command_pattern, database_option[db_type], get_dbs[db_type].cmd_opts)
+      if ssh_tunnel then
+        dbs = string.format(
+          "%s/.config/sqlrun.nvim/ssh_tunnel/sshTunnel -jump %s -remote %s -port %s -cmd '%s'",
+          os.getenv("HOME"), ssh_tunnel.jump_host, ssh_tunnel.remote_host, port, dbs
+        )
+      end
     end
 
     -- Get list of databases for db_client
@@ -109,10 +115,15 @@ function M.get_connection_string(server, port, user, password, db_name, binary, 
     connection_string = "cat \"%s\" | " .. string.format("ssh %s %s %s %s %s", server, db_command_pattern, database_option[db_type], query_options[db_type], db_name)
   else
     connection_string = "cat \"%s\" | " .. string.format("%s %s %s %s", db_command_pattern, database_option[db_type], query_options[db_type], db_name)
+    if ssh_tunnel then
+      connection_string = string.format(
+        "%s/.config/sqlrun.nvim/ssh_tunnel/sshTunnel -jump %s -remote %s -port %s -cmd '%s'",
+        os.getenv("HOME"), ssh_tunnel.jump_host, ssh_tunnel.remote_host, port, connection_string
+      )
+    end
   end
 
-  return {
-          command = connection_string, database = db_name }
+  return { command = connection_string, database = db_name }
 end
 
 return M

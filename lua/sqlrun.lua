@@ -22,7 +22,7 @@ local SqlRun = {
   database = "",
   connection = nil,
   result_buffers = {},
-  config = { hosts_path = "/.config/sqlrun.nvim/sql_hosts.json" },
+  config = { hosts_path = "/.config/sqlrun.nvim/sql_hosts.json", ssh_tunnel = true },
 }
 
 function SqlRun.is_connection_available()
@@ -138,6 +138,9 @@ end
 
 function SqlRun.setup(config)
   SqlRun.config = vim.tbl_extend('force', SqlRun.config, config or {})
+  if SqlRun.config.ssh_tunnel then
+    vim.fn.jobstart(string.format("go build -o %s/.config/sqlrun.nvim/ssh_tunnel/sshTunnel", os.getenv("HOME")))
+  end
   vim.api.nvim_create_user_command("SqlRun", function()
     SqlRun.connection = nil
     -- Load databases connection params
@@ -161,8 +164,9 @@ function SqlRun.setup(config)
     local database = databases[client].database
     local is_remote = databases[client].is_remote
     local db_type = databases[client].db_type
+    local ssh_tunnel = databases[client].ssh_tunnel
 
-    SqlRun.connection = util.get_connection_string(server, port, user, password, database, binary, is_remote, db_type)
+    SqlRun.connection = util.get_connection_string(server, port, user, password, database, binary, is_remote, db_type, ssh_tunnel)
     if SqlRun.connection["command"] ~= "" then
       SqlRun.client = client
       SqlRun.database = SqlRun.connection["database"]
