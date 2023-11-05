@@ -141,7 +141,7 @@ function SqlRun.setup(config)
   if SqlRun.config.ssh_tunnel and vim.fn.executable("go") == 1 then
     -- local cmd = string.format("go build -o %s/.config/sqlrun.nvim/ssh_tunnel/sshTunnel", os.getenv("HOME"))
     -- vim.fn.jobstart(cmd, { cwd = util.root_path() .. "/ssh_tunnel" })
-    vim.fn.jobstart("go build", { cwd = util.root_path() .. "/ssh_tunnel" })
+    vim.fn.jobstart("go build -o sshTunnel", { cwd = util.root_path() .. "/ssh_tunnel" })
   end
   vim.api.nvim_create_user_command("SqlRun", function()
     SqlRun.connection = nil
