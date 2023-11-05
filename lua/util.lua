@@ -67,6 +67,29 @@ local query_options = {
   postgresql = "",
 }
 
+---Split string into a table of strings using a separator.
+---@param inputString string The string to split.
+---@param sep string The separator to use.
+---@return table table A table of strings.
+local function split(inputString, sep)
+  local fields = {}
+
+  local pattern = string.format("([^%s]+)", sep)
+  local _ = string.gsub(inputString, pattern, function(c)
+    fields[#fields + 1] = c
+  end)
+
+  return fields
+end
+
+---Get the project root path
+---@return string string The project root path
+function M.root_path()
+  local str = debug.getinfo(1).source:sub(2)
+  local path, _ = split(str, "/")
+  return "/" .. table.concat(path, "/", 1, #path - 2)
+end
+
 function M.get_connection_string(server, port, user, password, db_name, binary, is_remote, db_type, ssh_tunnel)
   if db_type ~= "postgresql" and db_type ~= "mysql" then
     error(string.format("Specified database type %s not implemented. Please use 'postgresql' or 'mysql'", db_type))

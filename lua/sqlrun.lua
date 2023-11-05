@@ -22,7 +22,7 @@ local SqlRun = {
   database = "",
   connection = nil,
   result_buffers = {},
-  config = { hosts_path = "/.config/sqlrun.nvim/sql_hosts.json", ssh_tunnel = true },
+  config = { hosts_path = "/.config/sqlrun.nvim/sql_hosts.json", ssh_tunnel = false },
 }
 
 function SqlRun.is_connection_available()
@@ -138,8 +138,10 @@ end
 
 function SqlRun.setup(config)
   SqlRun.config = vim.tbl_extend('force', SqlRun.config, config or {})
-  if SqlRun.config.ssh_tunnel then
-    vim.fn.jobstart(string.format("go build -o %s/.config/sqlrun.nvim/ssh_tunnel/sshTunnel", os.getenv("HOME")))
+  if SqlRun.config.ssh_tunnel and vim.fn.executable("go") == 1 then
+    -- local cmd = string.format("go build -o %s/.config/sqlrun.nvim/ssh_tunnel/sshTunnel", os.getenv("HOME"))
+    -- vim.fn.jobstart(cmd, { cwd = util.root_path() .. "/ssh_tunnel" })
+    vim.fn.jobstart("go build", { cwd = util.root_path() .. "/ssh_tunnel" })
   end
   vim.api.nvim_create_user_command("SqlRun", function()
     SqlRun.connection = nil
