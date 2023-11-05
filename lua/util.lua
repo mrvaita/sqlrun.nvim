@@ -1,36 +1,5 @@
 local M = {}
 
-function M.select_value(prompt_message, data)
-    local result = nil
-    vim.ui.select(data, { prompt = prompt_message }, function(selection)
-      result = selection
-    end)
-
-    return result
-end
-
-function M.lines_from(file)
-  local lines = ""
-  for line in io.lines(file) do
-    lines = lines .. " " .. line
-  end
-  return lines
-end
-
-function M.format_query(query_str, db_type)
-  if string.lower(db_type) == "postgresql" then
-    query_str = string.format("\\timing on \n%s", query_str)      -- show timing of queries
-    query_str = string.format("\\pset border 2 \n%s", query_str)  -- show pretty lines outside the table
-    query_str = string.format("\\set QUIET 1 \n%s", query_str)    -- no console output for the following commands
-  elseif string.lower(db_type) == "mysql" then
-    query_str = string.format("set profiling=1;\n%s", query_str)  -- Doesn't seem to work :\
-  else
-    error(string.format("Specified database type %s not implemented. Please use 'postgresql' or 'mysql'", db_type))
-  end
-
-  return query_str
-end
-
 local password_field = {
   mysql = "MYSQL_PWD",
   postgresql = "PGPASSWORD",
@@ -82,6 +51,38 @@ local function split(inputString, sep)
   return fields
 end
 
+function M.select_value(prompt_message, data)
+    local result = nil
+    vim.ui.select(data, { prompt = prompt_message }, function(selection)
+      result = selection
+    end)
+
+    return result
+end
+
+function M.lines_from(file)
+  local lines = ""
+  for line in io.lines(file) do
+    lines = lines .. " " .. line
+  end
+
+  return lines
+end
+
+function M.format_query(query_str, db_type)
+  if string.lower(db_type) == "postgresql" then
+    query_str = string.format("\\timing on \n%s", query_str)      -- show timing of queries
+    query_str = string.format("\\pset border 2 \n%s", query_str)  -- show pretty lines outside the table
+    query_str = string.format("\\set QUIET 1 \n%s", query_str)    -- no console output for the following commands
+  elseif string.lower(db_type) == "mysql" then
+    query_str = string.format("set profiling=1;\n%s", query_str)  -- Doesn't seem to work :\
+  else
+    error(string.format("Specified database type %s not implemented. Please use 'postgresql' or 'mysql'", db_type))
+  end
+
+  return query_str
+end
+
 ---Get the project root path
 ---@return string string The project root path
 function M.root_path()
@@ -114,8 +115,8 @@ function M.get_connection_string(server, port, user, password, db_name, binary, 
       dbs = string.format("echo \"%s\" | %s %s %s", get_dbs[db_type].query, db_command_pattern, database_option[db_type], get_dbs[db_type].cmd_opts)
       if ssh_tunnel then
         dbs = string.format(
-          "%s/.config/sqlrun.nvim/ssh_tunnel/sshTunnel -jump %s -remote %s -port %s -cmd '%s'",
-          os.getenv("HOME"), ssh_tunnel.jump_host, ssh_tunnel.remote_host, port, dbs
+          "%s/ssh_tunnel/sshTunnel -jump %s -remote %s -port %s -cmd '%s'",
+          M.root_path(), ssh_tunnel.jump_host, ssh_tunnel.remote_host, port, dbs
         )
       end
     end
@@ -140,8 +141,8 @@ function M.get_connection_string(server, port, user, password, db_name, binary, 
     connection_string = "cat \"%s\" | " .. string.format("%s %s %s %s", db_command_pattern, database_option[db_type], query_options[db_type], db_name)
     if ssh_tunnel then
       connection_string = string.format(
-        "%s/.config/sqlrun.nvim/ssh_tunnel/sshTunnel -jump %s -remote %s -port %s -cmd '%s'",
-        os.getenv("HOME"), ssh_tunnel.jump_host, ssh_tunnel.remote_host, port, connection_string
+        "%s/ssh_tunnel/sshTunnel -jump %s -remote %s -port %s -cmd '%s'",
+        M.root_path(), ssh_tunnel.jump_host, ssh_tunnel.remote_host, port, connection_string
       )
     end
   end
