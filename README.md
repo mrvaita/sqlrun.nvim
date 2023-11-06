@@ -54,6 +54,44 @@ executed via ssh connection and that means:
 3. That the user added the RSA or DSA identities to the authentication agent (eg `$ ssh-add ~/.ssh/id_rsa` and entered the password).
 That way the password will not be requested the next time an ssh connection is performed.
 
+### Use ssh port forwarding through jump host
+If necessary, it is possible to open an ssh tunnel via jump host to reach the database server. This is equivalent to the
+ssh command `ssh local_port:remote.server.net:database_port jump.host.net`. This is achieved with a go script included
+in the plugin. I decided to include this functionality just to avoid to open a new terminal and execute the ssh command.
+#### Drawbacks
+* The go program is built everytime neovim is started. Doesn't take long though
+#### HOW IT WORKS
+* Go >= 1.21 must be installed and present in the path
+* On neovim start the go program is built in the package directory
+* Ssh logs are saved to a file under `~/.config/sqlrun.nvim/ssh_tunnel`
+* Only the current user is supported to connect to the jump host
+* The jump host must be present in the list of `known_hosts`
+* Authentication is performed exclusively with ssh agent
+* Plugin options should at least look like `opts = { ssh_tunnel = true }`
+* The database host in the json file should be specified like
+```json
+{
+        "connection_name": {
+                "server": "servername",
+                "port": 51015,
+                "binary": "/usr/bin/psql"
+                "user": "username",
+                "password": "",
+                "database": "",
+                "is_remote": false,
+                "db_type": "postgresql"
+                "ssh_tunnel": {
+                    "jump_host": "jump.host.net:port",
+                    "remote_host": "remote.host.net:remote_port"
+                }
+        }
+}
+```
+* If the jump host port is not specified the port 22 will be used
+* The `port` option in this case refers to the local port where the traffic from the remote host is forwarded.
+The database port should be specified under `remote_host`
+* `is_remote` option must be set to false
+
 ## Lualine integration
 SqlRun can use [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) to display connection information in the following way
 ```lua
