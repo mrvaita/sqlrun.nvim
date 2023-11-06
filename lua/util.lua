@@ -51,8 +51,12 @@ local function split(inputString, sep)
   return fields
 end
 
+---Open vim UI prompt a value selection
+---@param prompt_message string The message describing the type of selection
+---@param data table the values to be selected
+---@return string string the selected value
 function M.select_value(prompt_message, data)
-    local result = nil
+    local result
     vim.ui.select(data, { prompt = prompt_message }, function(selection)
       result = selection
     end)
@@ -69,6 +73,10 @@ function M.lines_from(file)
   return lines
 end
 
+---Add database options to query string
+---@param query_str string A string representig the query to be executed
+---@param db_type string The database type
+---@return string string The formatted query
 function M.format_query(query_str, db_type)
   if string.lower(db_type) == "postgresql" then
     query_str = string.format("\\timing on \n%s", query_str)      -- show timing of queries
@@ -91,6 +99,17 @@ function M.root_path()
   return "/" .. table.concat(path, "/", 1, #path - 2)
 end
 
+---Build a CLI command that will execute the selected query.
+---@param server string The server where the database is located
+---@param port integer The database port
+---@param user string The database user name
+---@param password string The database password
+---@param db_name string The database name
+---@param binary string The database binary to execute a database command
+---@param is_remote boolean If true the ssh command will be used
+---@param db_type string The database type. postgresql and mysql supported
+---@param ssh_tunnel table Params to run query through a ssh tunnel. `jump_host` Bastion server. `remote_host` Actual server where DB is located
+---@return table table A table including the CLI command and the database name
 function M.get_connection_string(server, port, user, password, db_name, binary, is_remote, db_type, ssh_tunnel)
   if db_type ~= "postgresql" and db_type ~= "mysql" then
     error(string.format("Specified database type %s not implemented. Please use 'postgresql' or 'mysql'", db_type))
