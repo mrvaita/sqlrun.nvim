@@ -22,7 +22,7 @@ local SqlRun = {
   database = "",
   connection = nil,
   result_buffers = {},
-  config = { hosts_path = "/.config/sqlrun.nvim/sql_hosts.json", ssh_tunnel = false },
+  config = { hosts_path = "~/.config/sqlrun.nvim/sql_hosts.json", ssh_tunnel = false },
 }
 
 function SqlRun.is_connection_available()
@@ -144,7 +144,7 @@ function SqlRun.setup(config)
   vim.api.nvim_create_user_command("SqlRun", function()
     SqlRun.connection = nil
     -- Load databases connection params
-    local databases = vim.fn.json_decode(util.lines_from(os.getenv("HOME") .. SqlRun.config.hosts_path))
+    local databases = vim.fn.json_decode(util.lines_from(vim.fn.expand(SqlRun.config.hosts_path))) or {}
     local connections = {}
     for k, _ in pairs(databases) do
         table.insert(connections, k)
