@@ -22,7 +22,7 @@ local SqlRun = {
   database = "",
   connection = nil,
   result_buffers = {},
-  config = { hosts_path = "/.config/sqlrun.nvim/sql_hosts.json", ssh_tunnel = false },
+  config = { hosts_path = "~/.config/sqlrun.nvim/sql_hosts.json", ssh_tunnel = false },
 }
 
 function SqlRun.is_connection_available()
@@ -158,40 +158,41 @@ function SqlRun.setup(config)
   vim.api.nvim_create_user_command("SqlRun", function()
     SqlRun.connection = nil
     -- Load databases connection params
-    local databases = vim.fn.json_decode(util.lines_from(os.getenv("HOME") .. SqlRun.config.hosts_path))
+    local databases = vim.fn.json_decode(util.lines_from(vim.fn.expand(SqlRun.config.hosts_path))) or {}
     local connections = {}
     for k, _ in pairs(databases) do
         table.insert(connections, k)
     end
     table.sort(connections)
 
-    local client = util.select_value("Select a database connection", connections)
-    if client == nil then
-      return
-    end
+    vim.ui.select(connections, { prompt = "Select a database connection"} , function(client)
+      if client == nil then
+        return
+      end
 
-    local server = databases[client].server
-    local port = databases[client].port
-    local binary = databases[client].binary
-    local user = databases[client].user
-    local password = databases[client].password
-    local database = databases[client].database
-    local is_remote = databases[client].is_remote
-    local db_type = databases[client].db_type
-    local ssh_tunnel = databases[client].ssh_tunnel
+      local server = databases[client].server
+      local port = databases[client].port
+      local binary = databases[client].binary
+      local user = databases[client].user
+      local password = databases[client].password
+      local database = databases[client].database
+      local is_remote = databases[client].is_remote
+      local db_type = databases[client].db_type
+      local ssh_tunnel = databases[client].ssh_tunnel
 
-    SqlRun.connection = util.get_connection_string(
-      server, port, user, password, database, binary, is_remote, db_type, ssh_tunnel)
-    if SqlRun.connection["command"] ~= "" then
-      SqlRun.client = client
-      SqlRun.database = SqlRun.connection["database"]
-    end
+      SqlRun.connection = util.get_connection_string(
+        server, port, user, password, database, binary, is_remote, db_type, ssh_tunnel)
+      if SqlRun.connection["command"] ~= "" then
+        SqlRun.client = client
+        SqlRun.database = SqlRun.connection["database"]
+      end
 
-    -- Call the function that executes query
-    local map_opts = { noremap = true, silent = true, nowait = true }
-    vim.api.nvim_buf_set_keymap(0, "n", "<leader>q", ":lua require('sqlrun').execute_buffer<CR>", map_opts)
-    vim.api.nvim_buf_set_keymap(0, "v", "<leader>q", ":lua require('sqlrun').execute_selection<CR>", map_opts)
-    vim.api.nvim_buf_set_keymap(0, "n", "<leader>l", ":lua require('sqlrun').execute_line_cmd", map_opts)
+      -- Call the function that executes query
+      local map_opts = { noremap = true, silent = true, nowait = true }
+      vim.api.nvim_buf_set_keymap(0, "n", "<leader>q", ":lua require('sqlrun').execute_buffer<CR>", map_opts)
+      vim.api.nvim_buf_set_keymap(0, "v", "<leader>q", ":lua require('sqlrun').execute_selection<CR>", map_opts)
+      vim.api.nvim_buf_set_keymap(0, "n", "<leader>l", ":lua require('sqlrun').execute_line_cmd", map_opts)
+    end)
   end, {})
 end
 
