@@ -166,7 +166,7 @@ function M.get_connection_string(server, port, user, password, db_name, binary, 
     end
   end
 
-  return { command = connection_string, database = db_name }
+  return { command = connection_string, database = db_name , db_type = db_type }
 end
 
 return M
