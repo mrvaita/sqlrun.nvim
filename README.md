@@ -41,20 +41,24 @@ should have the following fields:
                 "user": "username",
                 "password": "",
                 "database": "",
-                "is_remote": false,
+                "ssh": false,
                 "db_type": "postgresql"
         }
 }
 ```
 ## Database on remote server
-Remote servers can also be specified but for the plugin to work few conditions must be met. Remote queries are
-executed via ssh connection and that means:
-1. That the user can ssh into the server
-2. That the user did ssh into the server at least once and added the server to the ssh known hosts (typing `yes` in the terminal)
-3. That the user added the RSA or DSA identities to the authentication agent (eg `$ ssh-add ~/.ssh/id_rsa` and entered the password).
-That way the password will not be requested the next time an ssh connection is performed.
-
-### Use ssh port forwarding through jump host
+### Server directly accessible
+If the server can be reached by the database client it is enough to specify the desired host in the `server` field in
+the configuration file. `ssh` option must be set to `false` or omitted.
+### Connecting via ssh
+Remote servers can be specified to execute queries via ssh client. For the plugin to work few conditions must be met.
+1. The current user (not the database username) can ssh into the server
+2. The current user did ssh into the server at least once and added the server to list of known hosts (typing `yes` in
+the terminal)
+3. The current user added the RSA or DSA identities to the authentication agent (eg `$ ssh-add ~/.ssh/id_rsa` and
+entered the password). That way the password will not be requested the next time an ssh connection is performed.
+4. Set the `ssh` option to `true`.
+### Using ssh port forwarding through jump host
 If necessary, it is possible to open an ssh tunnel via jump host to reach the database server. This is equivalent to the
 ssh command `ssh -L local_port:remote.server.net:database_port jump.host.net`. This is achieved with a go script included
 in the plugin. I decided to include this functionality just to avoid to open a new terminal and execute the ssh command.
@@ -78,7 +82,6 @@ in the plugin. I decided to include this functionality just to avoid to open a n
                 "user": "username",
                 "password": "",
                 "database": "",
-                "is_remote": false,
                 "db_type": "postgresql"
                 "ssh_tunnel": {
                     "jump_host": "jump.host.net:ssh_port",
@@ -90,7 +93,7 @@ in the plugin. I decided to include this functionality just to avoid to open a n
 * If the jump host `ssh_port` is not specified the port 22 will be used
 * The `port` option in this case refers to the local port where the traffic from the remote host is forwarded.
 The database port should be specified under `remote_host`
-* `is_remote` option must be set to false
+* `ssh` option must be set to false or omitted.
 
 ## Lualine integration
 SqlRun can use [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) to display connection information in the following way

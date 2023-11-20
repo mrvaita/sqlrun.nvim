@@ -111,33 +111,32 @@ end
 ---@param password string The database password
 ---@param db_name string The database name
 ---@param binary string The database binary to execute a database command
----@param is_remote boolean If true the ssh command will be used
+---@param ssh boolean If true the ssh command will be used
 ---@param db_type string The database type. postgresql and mysql supported
 ---@param ssh_tunnel table Params to run query through a ssh tunnel. `jump_host` Bastion server. `remote_host` Actual server where DB is located
 ---@return table table A table including the CLI command and the database name
-function M.get_connection_string(server, port, user, password, db_name, binary, is_remote, db_type, ssh_tunnel)
+function M.get_connection_string(server, port, user, password, db_name, binary, ssh, db_type, ssh_tunnel)
   if db_type ~= "postgresql" and db_type ~= "mysql" then
     error(string.format("Specified database type %s not implemented. Please use 'postgresql' or 'mysql'", db_type))
   end
 
   local db_command_pattern = binary
-  if password ~= "" then
+  if password and password ~= "" then
     db_command_pattern = string.format("%s=%s %s", password_field[db_type], password, db_command_pattern)
   end
-
-  if server ~= "" then
+  if not ssh and server and server ~= "" and server ~= "localhost" then
     db_command_pattern = string.format("%s %s %s", db_command_pattern, host_option[db_type], server)
   end
-  if port ~= nil or port ~= "" then
+  if port and port ~= "" then
     db_command_pattern = string.format("%s %s %s", db_command_pattern, port_option[db_type], port)
   end
-  if user ~= "" then
+  if user and user ~= "" then
     db_command_pattern = string.format("%s %s %s", db_command_pattern, user_option[db_type], user)
   end
 
   if db_name == "" then
     local dbs = nil
-    if is_remote then
+    if ssh then
       dbs = string.format("echo \"%s\" | ssh %s \"%s %s %s\"", get_dbs[db_type].query, server, db_command_pattern, database_option[db_type], get_dbs[db_type].cmd_opts)
     else
       dbs = string.format("echo \"%s\" | %s %s %s", get_dbs[db_type].query, db_command_pattern, database_option[db_type], get_dbs[db_type].cmd_opts)
@@ -163,7 +162,7 @@ function M.get_connection_string(server, port, user, password, db_name, binary, 
   end
 
   local connection_string = ""
-  if is_remote then
+  if ssh then
     connection_string = "cat \"%s\" | " .. string.format("ssh %s %s %s %s %s", server, db_command_pattern, database_option[db_type], query_options[db_type], db_name)
   else
     connection_string = "cat \"%s\" | " .. string.format("%s %s %s %s", db_command_pattern, database_option[db_type], query_options[db_type], db_name)
