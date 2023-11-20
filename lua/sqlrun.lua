@@ -191,7 +191,7 @@ function SqlRun.setup(config)
       local map_opts = { noremap = true, silent = true, nowait = true }
       vim.api.nvim_buf_set_keymap(0, "n", "<leader>q", ":lua require('sqlrun').execute_buffer()<CR>", map_opts)
       vim.api.nvim_buf_set_keymap(0, "v", "<leader>q", ":lua require('sqlrun').execute_selection()<CR>", map_opts)
-      vim.api.nvim_buf_set_keymap(0, "n", "<leader>l", ":lua require('sqlrun').execute_line_cmd()", map_opts)
+      vim.api.nvim_buf_set_keymap(0, "n", "<leader>l", ":lua require('sqlrun').execute_current_line()", map_opts)
     end)
   end, {})
 end
