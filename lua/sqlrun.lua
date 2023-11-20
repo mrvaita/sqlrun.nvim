@@ -22,7 +22,7 @@ local SqlRun = {
   database = "",
   connection = nil,
   result_buffers = {},
-  config = { hosts_path = "/.config/sqlrun.nvim/sql_hosts.json", ssh_tunnel = false },
+  config = { hosts_path = "~/.config/sqlrun.nvim/sql_hosts.json", ssh_tunnel = false },
 }
 
 function SqlRun.is_connection_available()
@@ -69,7 +69,12 @@ local function run_query(query)
   })
 end
 
-function SqlRun.execute_buffer(db_type)
+function SqlRun.execute_buffer()
+  if not SqlRun.is_connection_available() then
+    return
+  end
+  local db_type = SqlRun.connection["db_type"]
+
   -- Get whole buffer content and write it to a file
   local bufcontent = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   local query = ""
@@ -82,7 +87,11 @@ function SqlRun.execute_buffer(db_type)
 end
 
 -- NOTE: V-Block selection will not work because it is useless
-function SqlRun.execute_selection(db_type)
+function SqlRun.execute_selection()
+  if not SqlRun.is_connection_available() then
+    return
+  end
+  local db_type = SqlRun.connection["db_type"]
 
   local query = ""
   local get_query_string = function(lines)
@@ -128,7 +137,12 @@ function SqlRun.execute_selection(db_type)
   run_query(query)
 end
 
-function SqlRun.execute_current_line(db_type)
+function SqlRun.execute_current_line()
+  if not SqlRun.is_connection_available() then
+    return
+  end
+  local db_type = SqlRun.connection["db_type"]
+
   local line_number = vim.api.nvim_win_get_cursor(0)[1]
   local lines = vim.api.nvim_buf_get_lines(0, line_number - 1, line_number, false)
 
@@ -144,43 +158,41 @@ function SqlRun.setup(config)
   vim.api.nvim_create_user_command("SqlRun", function()
     SqlRun.connection = nil
     -- Load databases connection params
-    local databases = vim.fn.json_decode(util.lines_from(os.getenv("HOME") .. SqlRun.config.hosts_path))
+    local databases = vim.fn.json_decode(util.lines_from(vim.fn.expand(SqlRun.config.hosts_path))) or {}
     local connections = {}
     for k, _ in pairs(databases) do
         table.insert(connections, k)
     end
     table.sort(connections)
 
-    local client = util.select_value("Select a database connection", connections)
-    if client == nil then
-      return
-    end
+    vim.ui.select(connections, { prompt = "Select a database connection"} , function(client)
+      if client == nil then
+        return
+      end
 
-    local server = databases[client].server
-    local port = databases[client].port
-    local binary = databases[client].binary
-    local user = databases[client].user
-    local password = databases[client].password
-    local database = databases[client].database
-    local is_remote = databases[client].is_remote
-    local db_type = databases[client].db_type
-    local ssh_tunnel = databases[client].ssh_tunnel
+      local server = databases[client].server
+      local port = databases[client].port
+      local binary = databases[client].binary
+      local user = databases[client].user
+      local password = databases[client].password
+      local database = databases[client].database
+      local is_remote = databases[client].is_remote
+      local db_type = databases[client].db_type
+      local ssh_tunnel = databases[client].ssh_tunnel
 
-    SqlRun.connection = util.get_connection_string(
-      server, port, user, password, database, binary, is_remote, db_type, ssh_tunnel)
-    if SqlRun.connection["command"] ~= "" then
-      SqlRun.client = client
-      SqlRun.database = SqlRun.connection["database"]
-    end
+      SqlRun.connection = util.get_connection_string(
+        server, port, user, password, database, binary, is_remote, db_type, ssh_tunnel)
+      if SqlRun.connection["command"] ~= "" then
+        SqlRun.client = client
+        SqlRun.database = SqlRun.connection["database"]
+      end
 
-    -- Call the function that executes query
-    local map_opts = { noremap = true, silent = true, nowait = true }
-    local execute_buffer_cmd = ":lua require('sqlrun').execute_buffer(\"%s\")<CR>"
-    local execute_selection_cmd = ":lua require('sqlrun').execute_selection(\"%s\")<CR>"
-    local execute_line_cmd = ":lua require('sqlrun').execute_current_line(\"%s\")<CR>"
-    vim.api.nvim_buf_set_keymap(0, "n", "<leader>q", string.format(execute_buffer_cmd, db_type), map_opts)
-    vim.api.nvim_buf_set_keymap(0, "v", "<leader>q", string.format(execute_selection_cmd, db_type), map_opts)
-    vim.api.nvim_buf_set_keymap(0, "n", "<leader>l", string.format(execute_line_cmd, db_type), map_opts)
+      -- Call the function that executes query
+      local map_opts = { noremap = true, silent = true, nowait = true }
+      vim.api.nvim_buf_set_keymap(0, "n", "<leader>q", ":lua require('sqlrun').execute_buffer()<CR>", map_opts)
+      vim.api.nvim_buf_set_keymap(0, "v", "<leader>q", ":lua require('sqlrun').execute_selection()<CR>", map_opts)
+      vim.api.nvim_buf_set_keymap(0, "n", "<leader>l", ":lua require('sqlrun').execute_current_line()<CR>", map_opts)
+    end)
   end, {})
 end
 
