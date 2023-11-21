@@ -5,6 +5,11 @@ local password_field = {
   postgresql = "PGPASSWORD",
 }
 
+local host_option = {
+  mysql = "-h",
+  postgresql = "-h",
+}
+
 local user_option = {
   mysql = "-u",
   postgresql = "-U",
@@ -118,6 +123,10 @@ function M.get_connection_string(server, port, user, password, db_name, binary, 
   local db_command_pattern = binary
   if password ~= "" then
     db_command_pattern = string.format("%s=%s %s", password_field[db_type], password, db_command_pattern)
+  end
+
+  if server ~= "" then
+    db_command_pattern = string.format("%s %s %s", db_command_pattern, host_option[db_type], server)
   end
   if port ~= nil or port ~= "" then
     db_command_pattern = string.format("%s %s %s", db_command_pattern, port_option[db_type], port)
