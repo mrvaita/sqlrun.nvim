@@ -94,6 +94,18 @@ in the plugin. I decided to include this functionality just to avoid to open a n
 * The `port` option in this case refers to the local port where the traffic from the remote host is forwarded.
 The database port should be specified under `remote_host`
 * `ssh` option must be set to false or omitted.
+## BigQuery
+Google BigQuery is accessed using the [BigQuery command-line tool](https://cloud.google.com/bigquery/docs/reference/bq-cli-reference).
+This means that configuration is not required. If in your terminal it is possible to successfully execute `bq query --use_legacy_sql=false SELECT 1` you are good to go.
+### Usage
+`:BqRun` will enable a set of user commands in the current buffer:
+- `:ShowDatasets <project_id>`: Shows all the datasets present in the specified project. If no roject_id is specified,
+the command will show datasets in the current project
+- `:ShowTables <project_id>:<dataset_id> <filter>`: Shows the tables present in a dataset. By default the results will
+top to 1000. If necessary it is possible to specify a filter keyword to restrict the result.
+- `:Describe <project_id>:<dataset_id>.<table_name>`: to show information about the specified table.
+- The default key bindings to execute line, selected and buffer queries.
+It is also possible to add `\dry` at the beginning of the query to execute it as a dry run.
 
 ## Lualine integration
 SqlRun can use [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) to display connection information in the following way

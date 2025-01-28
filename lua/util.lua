@@ -89,8 +89,10 @@ function M.format_query(query_str, db_type)
     query_str = string.format("\\set QUIET 1 \n%s", query_str)    -- no console output for the following commands
   elseif string.lower(db_type) == "mysql" then
     query_str = string.format("set profiling=1;\n%s", query_str)  -- Doesn't seem to work :\
+  elseif string.lower(db_type) == "bigquery" then
+    query_str = string.format("%s", string.gsub(query_str, "\\dry", "--dry_run", 1))
   else
-    error(string.format("Specified database type %s not implemented. Please use 'postgresql' or 'mysql'", db_type))
+    error(string.format("Specified database type %s not implemented. Please use 'postgresql', 'mysql' or 'bigquery'", db_type))
   end
 
   return query_str

@@ -30,6 +30,10 @@ function SqlRun.is_connection_available()
 end
 
 function SqlRun.get_current_connection_info()
+  if SqlRun.connection["db_type"] == "bigquery" then
+    return "BigQuery"
+  end
+
   return string.format("%s:%s", SqlRun.client, SqlRun.database)
 end
 
@@ -155,6 +159,7 @@ function SqlRun.setup(config)
   if SqlRun.config.ssh_tunnel and vim.fn.executable("go") == 1 then
     vim.fn.jobstart("go build -o sshTunnel", { cwd = util.root_path() .. "/ssh_tunnel" })
   end
+
   vim.api.nvim_create_user_command("SqlRun", function()
     SqlRun.connection = nil
     -- Load databases connection params
@@ -193,6 +198,44 @@ function SqlRun.setup(config)
       vim.api.nvim_buf_set_keymap(0, "v", "<leader>q", ":lua require('sqlrun').execute_selection()<CR>", map_opts)
       vim.api.nvim_buf_set_keymap(0, "n", "<leader>l", ":lua require('sqlrun').execute_current_line()<CR>", map_opts)
     end)
+  end, {})
+
+  vim.api.nvim_create_user_command("BqRun", function()
+    local command_query = "bq query --use_legacy_sql=false $(cat %s)"
+    SqlRun.connection = { command = command_query, db_type = "bigquery" }
+
+    vim.api.nvim_create_user_command("ShowDatasets", function(project_id)
+      if project_id.args ~= "" then
+        -- SqlRun.connection = { command = "bq ls --project_id $(cat %s)" }
+        SqlRun.connection["command"] = "bq ls --project_id $(cat %s)"
+      else
+        SqlRun.connection["command"] = "bq ls"
+      end
+      run_query(project_id.args)
+      SqlRun.connection["command"] = command_query
+    end, { nargs = '?' })
+
+    vim.api.nvim_create_user_command("ShowTables", function(dataset)
+      -- bq ls --max_results 1000 'dwh-dev-setup:database_zed_dev_de' | grep merchant
+      local command = "bq ls --max_results 1000 $(cat %s)"
+      if dataset.fargs[2] ~= nil then
+        command = command .. " | grep " .. dataset.fargs[2]
+      end
+      SqlRun.connection = { command = command }
+      run_query(dataset.fargs[1])
+      SqlRun.connection = { command = command_query }
+    end, { nargs = '*' })
+
+    vim.api.nvim_create_user_command("Describe", function(project)
+      SqlRun.connection = { command = "bq show $(cat %s)" }
+      run_query(project.args)
+      SqlRun.connection = { command = command_query }
+    end, { nargs = 1 })
+
+    local map_opts = { noremap = true, silent = true, nowait = true }
+    vim.api.nvim_buf_set_keymap(0, "n", "<leader>q", ":lua require('sqlrun').execute_buffer()<CR>", map_opts)
+    vim.api.nvim_buf_set_keymap(0, "v", "<leader>q", ":lua require('sqlrun').execute_selection()<CR>", map_opts)
+    vim.api.nvim_buf_set_keymap(0, "n", "<leader>l", ":lua require('sqlrun').execute_current_line()<CR>", map_opts)
   end, {})
 end
 
