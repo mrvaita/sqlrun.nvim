@@ -206,7 +206,6 @@ function SqlRun.setup(config)
 
     vim.api.nvim_create_user_command("ShowDatasets", function(project_id)
       if project_id.args ~= "" then
-        -- SqlRun.connection = { command = "bq ls --project_id $(cat %s)" }
         SqlRun.connection["command"] = "bq ls --project_id $(cat %s)"
       else
         SqlRun.connection["command"] = "bq ls"
@@ -216,20 +215,19 @@ function SqlRun.setup(config)
     end, { nargs = '?' })
 
     vim.api.nvim_create_user_command("ShowTables", function(dataset)
-      -- bq ls --max_results 1000 'dwh-dev-setup:database_zed_dev_de' | grep merchant
       local command = "bq ls --max_results 1000 $(cat %s)"
       if dataset.fargs[2] ~= nil then
         command = command .. " | grep " .. dataset.fargs[2]
       end
-      SqlRun.connection = { command = command }
+      SqlRun.connection["command"] = command
       run_query(dataset.fargs[1])
-      SqlRun.connection = { command = command_query }
+      SqlRun.connection["command"] = command_query
     end, { nargs = '*' })
 
     vim.api.nvim_create_user_command("Describe", function(project)
-      SqlRun.connection = { command = "bq show $(cat %s)" }
+      SqlRun.connection["command"] = "bq show $(cat %s)"
       run_query(project.args)
-      SqlRun.connection = { command = command_query }
+      SqlRun.connection["command"] = command_query
     end, { nargs = 1 })
 
     local map_opts = { noremap = true, silent = true, nowait = true }
