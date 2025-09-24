@@ -201,7 +201,7 @@ function SqlRun.setup(config)
   end, {})
 
   vim.api.nvim_create_user_command("BqRun", function()
-    local command_query = "bq query --use_legacy_sql=false $(cat %s)"
+    local command_query = "bq query --use_legacy_sql=false < %s"
     SqlRun.connection = { command = command_query, db_type = "bigquery" }
 
     vim.api.nvim_create_user_command("ShowDatasets", function(project_id)
