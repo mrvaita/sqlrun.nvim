@@ -31,7 +31,7 @@ end
 
 function SqlRun.get_current_connection_info()
   if SqlRun.connection["db_type"] == "bigquery" then
-    return "BigQuery"
+    return string.format("%s:%s", SqlRun.connection["db_type"], SqlRun.connection["account"])
   end
 
   return string.format("%s:%s", SqlRun.client, SqlRun.database)
@@ -201,21 +201,33 @@ function SqlRun.setup(config)
   end, {})
 
   vim.api.nvim_create_user_command("BqRun", function()
-    local command_query = "bq query --use_legacy_sql=false < %s"
-    SqlRun.connection = { command = command_query, db_type = "bigquery" }
+    -- load default Bigquery account if any
+    local bq_connector = vim.fn.json_decode(util.lines_from(vim.fn.expand(SqlRun.config.hosts_path)))["bigquery"] or {}
+    local google_account = bq_connector["account"] or util.select_value("Select a Google Cloud account", util.get_gcloud_accounts())
+    local bq_binary = string.format("CLOUDSDK_CORE_ACCOUNT=%s %s ", google_account, bq_connector["binary"] or "bq")
+    local command_query = bq_binary .. "query --use_legacy_sql=false < %s"
+    SqlRun.connection = { command = command_query, db_type = "bigquery", account = google_account }
+
+    vim.api.nvim_create_user_command("BqChangeAccount", function()
+      google_account = util.select_value("Select a Bigquery account", util.get_gcloud_accounts())
+      bq_binary = string.format("CLOUDSDK_CORE_ACCOUNT=%s %s ", google_account, bq_connector["binary"] or "bq")
+      command_query = bq_binary .. "query --use_legacy_sql=false < %s"
+      SqlRun.connection["command"] = command_query
+      SqlRun.connection["account"] = google_account
+    end, {})
 
     vim.api.nvim_create_user_command("ShowDatasets", function(project_id)
       if project_id.args ~= "" then
-        SqlRun.connection["command"] = "bq ls --project_id $(cat %s)"
+        SqlRun.connection["command"] = bq_binary .. "ls --project_id $(cat %s)"
       else
-        SqlRun.connection["command"] = "bq ls"
+        SqlRun.connection["command"] = bq_binary .. "ls"
       end
       run_query(project_id.args)
       SqlRun.connection["command"] = command_query
     end, { nargs = '?' })
 
     vim.api.nvim_create_user_command("ShowTables", function(dataset)
-      local command = "bq ls --max_results 1000 $(cat %s)"
+      local command = bq_binary .. "ls --max_results 1000 $(cat %s)"
       if dataset.fargs[2] ~= nil then
         command = command .. " | grep " .. dataset.fargs[2]
       end
@@ -225,7 +237,7 @@ function SqlRun.setup(config)
     end, { nargs = '*' })
 
     vim.api.nvim_create_user_command("Describe", function(project)
-      SqlRun.connection["command"] = "bq show $(cat %s)"
+      SqlRun.connection["command"] = bq_binary .. "show $(cat %s)"
       run_query(project.args)
       SqlRun.connection["command"] = command_query
     end, { nargs = 1 })

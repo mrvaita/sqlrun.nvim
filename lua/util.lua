@@ -78,6 +78,22 @@ function M.lines_from(file)
   return lines
 end
 
+---Get available google accounts
+---@return table string A list of gcloud accounts
+function M.get_gcloud_accounts()
+  local result = vim.fn.systemlist("gcloud auth list --format='value(account)'")
+
+  local accounts = {}
+  if result then
+      for _, v in pairs(result) do
+          table.insert(accounts, v)
+      end
+  end
+
+  return accounts
+end
+
+
 ---Add database options to query string
 ---@param query_str string A string representig the query to be executed
 ---@param db_type string The database type

@@ -96,7 +96,17 @@ The database port should be specified under `remote_host`
 * `ssh` option must be set to false or omitted.
 ## BigQuery
 Google BigQuery is accessed using the [BigQuery command-line tool](https://cloud.google.com/bigquery/docs/reference/bq-cli-reference).
-This means that configuration is not required. If in your terminal it is possible to successfully execute `bq query --use_legacy_sql=false SELECT 1` you are good to go.
+If in your terminal it is possible to successfully execute `bq query --use_legacy_sql=false SELECT 1` you are good to go.
+Configuration is not required and `:BqRun` will ask by default to select a gcloud account. In the configuration is
+still possible to specify the `bq` binary and a default account like
+```json
+{
+    "bigquery": {
+        "binary": "/path/to/bq",
+        "account": "account-name@your-project.iam.gserviceaccount.com"
+    }
+}
+```
 ### Usage
 `:BqRun` will enable a set of user commands in the current buffer:
 - `:ShowDatasets <project_id>`: Shows all the datasets present in the specified project. If no roject_id is specified,
@@ -104,7 +114,8 @@ the command will show datasets in the current project
 - `:ShowTables <project_id>:<dataset_id> <filter>`: Shows the tables present in a dataset. By default the results will
 top to 1000. If necessary it is possible to specify a filter keyword to restrict the result.
 - `:Describe <project_id>:<dataset_id>.<table_name>`: to show information about the specified table.
-- The default key bindings to execute line, selected and buffer queries.
+- `:BqChangeAccount`: Will show the available gcloud accounts and allow the selection of a new one.
+- The default key bindings to execute line, selected and buffer queries (`<leader>l`, `<leader>q` and `<leader>q` respectively).
 It is also possible to add `\dry` at the beginning of the query to execute it as a dry run.
 
 ## Lualine integration
